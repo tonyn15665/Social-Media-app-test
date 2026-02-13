@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoPost – AI Social Media Autopilot [PROTOTYPE]</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f5;
+  --white: #ffffff;
+  --ink: #1a1714;
+  --ink2: #4a4540;
+  --muted: #9a948e;
+  --border: #e8e3dc;
+  --accent: #ff4d1c;
+  --accent-light: #fff0ec;
+  --green: #1a9e5f;
+  --green-light: #edf7f2;
+  --radius: 14px;
+  --shadow: 0 2px 16px rgba(26,23,20,0.08);
+  --shadow-lg: 0 8px 40px rgba(26,23,20,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+}
+
+/* API Key Banner */
+.api-banner {
+  background: #fff8e1;
+  border-bottom: 2px solid #f59e0b;
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #92400e;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.api-banner.hidden { display: none; }
+
+.api-banner strong { color: #78350f; }
+
+.api-banner button {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.api-banner button:hover { background: #d97706; }
+
+.api-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,23,20,0.7);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.api-modal-overlay.open { display: flex; }
+
+.api-modal {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 32px;
+  width: 520px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+}
+
+.api-modal h3 {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.api-modal p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.api-modal label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink2);
+  margin-bottom: 6px;
+}
+
+.api-modal input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: monospace;
+  margin-bottom: 16px;
+}
+
+.api-modal input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.api-modal .btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.api-modal button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.api-modal .btn-save {
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+.api-modal .btn-save:hover { background: #e03a0c; }
+
+.api-modal .btn-cancel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--ink);
+}
+
+.api-modal .btn-cancel:hover { border-color: var(--ink); }
+
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--ink);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: white;
+}
+
+.logo-name {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: white;
+}
+
+.logo-tag {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.steps-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: rgba(255,255,255,0.4);
+}
+
+.step-item.active { background: rgba(255,255,255,0.08); color: white; }
+.step-item.completed { color: rgba(255,255,255,0.6); }
+.step-item.completed .step-circle { background: var(--green); border-color: var(--green); color: white; }
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.step-item.active .step-circle { background: var(--accent); border-color: var(--accent); color: white; }
+.step-label { font-size: 14px; font-weight: 500; }
+.step-sublabel { font-size: 11px; opacity: 0.6; margin-top: 1px; }
+
+.sidebar-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.plan-badge {
+  background: rgba(255,77,28,0.15);
+  border: 1px solid rgba(255,77,28,0.3);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.user-info { display: flex; align-items: center; gap: 10px; }
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+}
+
+.user-name { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 500; }
+
+/* Main */
+.main { padding: 40px 48px; max-width: 860px; }
+
+.page-header { margin-bottom: 36px; animation: fadeUp 0.4s ease both; }
+.page-header h2 { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; margin-bottom: 6px; }
+.page-header p { color: var(--muted); font-size: 15px; }
+
+.step-panel { display: none; }
+.step-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+
+/* Upload */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 48px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+  position: relative;
+}
+
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
+.upload-icon { width: 56px; height: 56px; background: var(--accent-light); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
+.upload-zone h3 { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 6px; }
+.upload-zone p { color: var(--muted); font-size: 14px; }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 20px; }
+
+.photo-item { aspect-ratio: 1; border-radius: 10px; overflow: hidden; position: relative; background: var(--border); animation: popIn 0.3s ease both; }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-item .remove-btn {
+  position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
+  background: rgba(0,0,0,0.6); border: none; border-radius: 50%; color: white;
+  font-size: 12px; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; opacity: 0; transition: opacity 0.15s;
+}
+.photo-item:hover .remove-btn { opacity: 1; }
+
+.photo-count {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--green-light); color: var(--green);
+  font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin-top: 16px;
+}
+
+/* Forms */
+.schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.form-select, .form-input {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; font-family: 'Instrument Sans', sans-serif; font-size: 14px;
+  color: var(--ink); outline: none; transition: border-color 0.15s; appearance: none; cursor: pointer;
+}
+.form-select:focus, .form-input:focus { border-color: var(--accent); }
+
+/* Platforms */
+.platform-row { display: flex; flex-direction: column; gap: 10px; }
+
+.platform-card {
+  display: flex; align-items: center; gap: 14px; background: var(--white);
+  border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 20px;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.platform-card.selected { border-color: var(--accent); background: var(--accent-light); }
+
+.platform-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.platform-card[data-platform="instagram"] .platform-icon { background: #fce4ec; }
+.platform-card[data-platform="tiktok"] .platform-icon { background: #f5f5f5; }
+.platform-card[data-platform="facebook"] .platform-icon { background: #e8f0fe; }
+
+.platform-name { font-weight: 600; font-size: 15px; flex: 1; }
+.platform-handle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.toggle { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+.toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.platform-card.selected .toggle { background: var(--accent); }
+.platform-card.selected .toggle::after { transform: translateX(20px); }
+
+/* Queue */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.stat-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; animation: fadeUp 0.3s ease both; }
+.stat-value { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 900; font-size: 32px; letter-spacing: -1px; margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+.queue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.queue-tabs { display: flex; gap: 4px; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 4px; }
+.q-tab { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--muted); border: none; background: none; }
+.q-tab.active { background: var(--ink); color: white; }
+
+.post-card {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 12px; display: grid;
+  grid-template-columns: 80px 1fr auto; gap: 16px; align-items: center;
+  animation: fadeUp 0.3s ease both; transition: box-shadow 0.15s;
+}
+.post-card:hover { box-shadow: var(--shadow); }
+
+.post-thumb { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; flex-shrink: 0; }
+.post-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+
+.post-caption { font-size: 14px; color: var(--ink2); line-height: 1.55; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.post-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.meta-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--bg); border: 1px solid var(--border); color: var(--ink2); }
+.meta-pill.platform-ig { background: #fce4ec; color: #e1306c; border-color: #f48fb1; }
+.meta-pill.platform-tt { background: #f5f5f5; color: #333; border-color: #ddd; }
+.meta-pill.platform-fb { background: #e8f0fe; color: #1877f2; border-color: #90caf9; }
+
+.post-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.post-status { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+.post-status.scheduled { background: #fff8e1; color: #f59e0b; }
+.post-status.posted { background: var(--green-light); color: var(--green); }
+
+.action-btns { display: flex; gap: 6px; }
+.icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
+.icon-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Buttons */
+.btn-primary {
+  background: var(--accent); color: white; border: none; padding: 14px 32px;
+  border-radius: 12px; font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700;
+  font-size: 16px; cursor: pointer; transition: all 0.15s; display: inline-flex;
+  align-items: center; gap: 8px;
+}
+.btn-primary:hover { background: #e03a0c; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,77,28,0.35); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  background: var(--white); color: var(--ink); border: 1.5px solid var(--border);
+  padding: 13px 24px; border-radius: 12px; font-family: 'Cabinet Grotesk', sans-serif;
+  font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.15s;
+}
+.btn-secondary:hover { border-color: var(--ink); }
+
+.btn-row { display: flex; gap: 12px; margin-top: 32px; align-items: center; }
+
+.section-divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+.section-title { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 32px; right: 32px; background: var(--ink); color: white;
+  padding: 14px 22px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-lg); z-index: 1000; display: flex; align-items: center; gap: 10px;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.5); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+
+.modal { background: var(--white); border-radius: 20px; padding: 36px; width: 480px; max-width: 90vw; box-shadow: var(--shadow-lg); animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.modal h3 { font-family: 'Cabinet Grotesk', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 8px; }
+.modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+
+.modal-caption { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.65; color: var(--ink2); margin-bottom: 16px; min-height: 100px; }
+.modal-caption[contenteditable="true"]:focus { outline: none; border-color: var(--accent); }
+.modal-caption.loading { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--muted); }
+
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--ink2);
+}
+.copy-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+.post-platform-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+  border-radius: 8px; border: none; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; text-decoration: none;
+}
+.post-platform-btn.ig { background: #fce4ec; color: #e1306c; }
+.post-platform-btn.tt { background: #f5f5f5; color: #333; }
+.post-platform-btn.fb { background: #e8f0fe; color: #1877f2; }
+.post-platform-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+.generating-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #ff8c5a, var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner-sm { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner-dark { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+</style>
+</head>
+<body>
+
+<!-- API Key Banner -->
+<div class="api-banner" id="apiBanner">
+  <strong>⚠️ API Keys Required:</strong> Add your Anthropic API key to generate captions. <button onclick="openApiModal()">Configure Keys</button>
+</div>
+
+<!-- API Key Modal -->
+<div class="api-modal-overlay" id="apiModal">
+  <div class="api-modal">
+    <h3>🔑 Configure API Keys</h3>
+    <p>AutoPost needs API access to generate AI captions. Your keys are stored locally in your browser and never sent anywhere except the respective APIs.</p>
+    
+    <label>Anthropic API Key (Required for captions)</label>
+    <input type="password" id="anthropicKey" placeholder="sk-ant-xxxxxxxxxxxxx">
+    <small style="color:var(--muted);font-size:12px;display:block;margin-top:-12px;margin-bottom:12px;">Get your key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></small>
+    
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveApiKeys()">Save Keys</button>
+      <button class="btn-cancel" onclick="closeApiModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">A</div>
+      <div>
+        <div class="logo-name">AutoPost</div>
+        <div class="logo-tag">Prototype v1.0</div>
+      </div>
+    </div>
+
+    <nav class="steps-nav">
+      <div class="step-item active" onclick="goToStep(1)" id="nav-1">
+        <div class="step-circle">1</div>
+        <div><div class="step-label">Photo Library</div><div class="step-sublabel">Upload your products</div></div>
+      </div>
+      <div class="step-item" onclick="goToStep(2)" id="nav-2">
+        <div class="step-circle">2</div>
+        <div><div class="step-label">Post Schedule</div><div class="step-sublabel">Frequency & timing</div></div>
+      </div>
+      <div class="step-item" onclick="goToStep(3)" id="nav-3">
+        <div class="step-circle">3</div>
+        <div><div class="step-label">Connect Accounts</div><div class="step-sublabel">Instagram, TikTok, Facebook</div></div>
+      </div>
+      <div class="step-item" onclick="goToStep(4)" id="nav-4">
+        <div class="step-circle">4</div>
+        <div><div class="step-label">Content Queue</div><div class="step-sublabel">Review & manage posts</div></div>
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="plan-badge">✦ Prototype</div>
+      <div class="user-info">
+        <div class="avatar">D</div>
+        <div class="user-name">Demo Account</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- STEP 1 -->
+    <div class="step-panel active" id="step-1">
+      <div class="page-header">
+        <h2>Upload your product photos</h2>
+        <p>Add the images AutoPost will use to create and schedule your content.</p>
+      </div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" multiple accept="image/*" onchange="handleFiles(event)" id="fileInput">
+        <div class="upload-icon">📸</div>
+        <h3>Drop photos here</h3>
+        <p>JPG, PNG, WEBP · Or click to browse</p>
+      </div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div id="photoCount"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="goToStep(2)" id="step1Next" disabled>Continue → Schedule</button>
+        <span style="color:var(--muted);font-size:13px" id="step1hint">Add at least 1 photo to continue</span>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-panel" id="step-2">
+      <div class="page-header">
+        <h2>Set your posting schedule</h2>
+        <p>AutoPost will automatically create and publish content on your chosen cadence.</p>
+      </div>
+      <div class="schedule-grid">
+        <div class="form-group">
+          <div class="form-label">How often to post?</div>
+          <select class="form-select" id="postFreq">
+            <option>Daily (1 post/day)</option>
+            <option selected>2x per week</option>
+            <option>3x per week</option>
+            <option>Weekly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Best time to post</div>
+          <select class="form-select" id="postTime">
+            <option>Morning (8–10 AM)</option>
+            <option selected>Midday (11 AM–1 PM)</option>
+            <option>Afternoon (3–5 PM)</option>
+            <option>Evening (7–9 PM)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Content style</div>
+          <select class="form-select" id="contentStyle">
+            <option>Product showcase</option>
+            <option selected>Lifestyle & product</option>
+            <option>Promotional / sale</option>
+            <option>Educational / tips</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Brand tone</div>
+          <select class="form-select" id="brandTone">
+            <option>Professional</option>
+            <option selected>Friendly & approachable</option>
+            <option>Playful & fun</option>
+            <option>Luxury & aspirational</option>
+          </select>
+        </div>
+      </div>
+      <hr class="section-divider">
+      <div class="section-title">📱 Post to platforms</div>
+      <div class="platform-row">
+        <div class="platform-card selected" data-platform="instagram" onclick="togglePlatform(this)">
+          <div class="platform-icon">📸</div>
+          <div><div class="platform-name">Instagram</div><div class="platform-handle">Feed posts + Reels</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="platform-card selected" data-platform="tiktok" onclick="togglePlatform(this)">
+          <div class="platform-icon">🎵</div>
+          <div><div class="platform-name">TikTok</div><div class="platform-handle">Short-form videos</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="platform-card" data-platform="facebook" onclick="togglePlatform(this)">
+          <div class="platform-icon">👍</div>
+          <div><div class="platform-name">Facebook</div><div class="platform-handle">Page posts + Stories</div></div>
+          <div class="toggle"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="goToStep(3)">Continue → Connect Accounts</button>
+        <button class="btn-secondary" onclick="goToStep(1)">Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-panel" id="step-3">
+      <div class="page-header">
+        <h2>Connect your social accounts</h2>
+        <p>AutoPost needs permission to post on your behalf.</p>
+      </div>
+
+      <div style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--ink2);line-height:1.6;">
+        💡 <strong>How it works:</strong> Click a platform below to open its compose screen. AutoPost will copy your AI-generated caption to your clipboard automatically — just paste and post.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;background:#fce4ec;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">📸</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:15px">Instagram</div><div style="font-size:13px;color:var(--muted)">Opens instagram.com/create</div></div>
+          <span style="background:var(--green-light);color:var(--green);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Ready ✓</span>
+        </div>
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;background:#f5f5f5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">🎵</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:15px">TikTok</div><div style="font-size:13px;color:var(--muted)">Opens tiktok.com/upload</div></div>
+          <span style="background:var(--green-light);color:var(--green);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Ready ✓</span>
+        </div>
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;background:#e8f0fe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">👍</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:15px">Facebook</div><div style="font-size:13px;color:var(--muted)">Opens facebook.com/post</div></div>
+          <span style="background:var(--green-light);color:var(--green);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Ready ✓</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="goToStep(4)">Generate My Content Queue →</button>
+        <button class="btn-secondary" onclick="goToStep(2)">Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-panel" id="step-4">
+      <div class="page-header">
+        <h2>Your content queue</h2>
+        <p>AI-generated posts ready to go. Copy the caption and open the platform to post.</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-scheduled">0</div>
+          <div class="stat-label">Posts Scheduled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-platforms">3</div>
+          <div class="stat-label">Platforms Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-photos">0</div>
+          <div class="stat-label">Photos in Library</div>
+        </div>
+      </div>
+
+      <div class="queue-header">
+        <div class="section-title" style="margin:0">Upcoming Posts</div>
+        <div class="queue-tabs">
+          <button class="q-tab active" onclick="filterQueue('all', this)">All</button>
+          <button class="q-tab" onclick="filterQueue('scheduled', this)">Scheduled</button>
+          <button class="q-tab" onclick="filterQueue('posted', this)">Posted</button>
+        </div>
+      </div>
+
+      <div id="queueList">
+        <div style="text-align:center;padding:60px;color:var(--muted)">
+          <div class="spinner-dark" style="margin:0 auto 16px"></div>
+          <div style="font-weight:600;color:var(--ink)">AI is creating your captions...</div>
+          <div class="generating-bar" style="width:220px;margin:14px auto 0"></div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="justify-content:center;margin-top:16px">
+        <button class="btn-primary" onclick="generateMorePosts()">✦ Generate More Posts</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Caption Modal -->
+<div class="modal-overlay" id="captionModal">
+  <div class="modal">
+    <h3>✏️ Edit & Post</h3>
+    <p>Edit your caption, then copy it and open the platform to post.</p>
+    <div class="modal-caption" id="modalCaptionText" contenteditable="true"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="copy-btn" id="copyBtn" onclick="copyCaption()">📋 Copy Caption</button>
+      <a class="post-platform-btn ig" href="https://www.instagram.com/create/style/" target="_blank">📸 Open Instagram</a>
+      <a class="post-platform-btn tt" href="https://www.tiktok.com/upload" target="_blank">🎵 Open TikTok</a>
+      <a class="post-platform-btn fb" href="https://www.facebook.com/" target="_blank">👍 Open Facebook</a>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-primary" style="flex:1;justify-content:center" onclick="regenerateCaption()">✦ Regenerate</button>
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────
+let photos = [];
+let posts = [];
+let currentEditPost = null;
+let apiKeys = {
+  anthropic: localStorage.getItem('anthropic_key') || '',
+  stability: localStorage.getItem('stability_key') || ''
+};
+
+// Check if keys are configured
+window.addEventListener('load', () => {
+  if (!apiKeys.anthropic) {
+    document.getElementById('apiBanner').classList.remove('hidden');
+  }
+});
+
+// ── API Key Management ───────────────────────────────────────────
+function openApiModal() {
+  document.getElementById('anthropicKey').value = apiKeys.anthropic;
+  document.getElementById('apiModal').classList.add('open');
+}
+
+function closeApiModal() {
+  document.getElementById('apiModal').classList.remove('open');
+}
+
+function saveApiKeys() {
+  apiKeys.anthropic = document.getElementById('anthropicKey').value.trim();
+  
+  if (apiKeys.anthropic) {
+    localStorage.setItem('anthropic_key', apiKeys.anthropic);
+    document.getElementById('apiBanner').classList.add('hidden');
+    showToast('✓ API keys saved!');
+    closeApiModal();
+  } else {
+    showToast('⚠️ Anthropic key is required');
+  }
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function goToStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'completed');
+    const circle = el.querySelector('.step-circle');
+    if (i + 1 < n) { el.classList.add('completed'); circle.textContent = '✓'; }
+    else circle.textContent = i + 1;
+  });
+  document.getElementById(`nav-${n}`).classList.add('active');
+  if (n === 4) initQueue();
+}
+
+// ── Step 1: Photos ───────────────────────────────────────────────
+function handleFiles(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      photos.push({ 
+        id: Date.now() + Math.random(), 
+        url: ev.target.result, 
+        name: f.name 
+      });
+      renderPhotoGrid();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = photos.map(p => `
+    <div class="photo-item">
+      <img src="${p.url}" alt="${p.name}">
+      <button class="remove-btn" onclick="removePhoto('${p.id}')">✕</button>
+    </div>`).join('');
+
+  const countEl = document.getElementById('photoCount');
+  if (photos.length > 0) {
+    countEl.innerHTML = `<span class="photo-count">✓ ${photos.length} photo${photos.length > 1 ? 's' : ''} ready</span>`;
+    document.getElementById('step1Next').disabled = false;
+    document.getElementById('step1hint').textContent = '';
+  } else {
+    countEl.innerHTML = '';
+    document.getElementById('step1Next').disabled = true;
+    document.getElementById('step1hint').textContent = 'Add at least 1 photo to continue';
+  }
+}
+
+function removePhoto(id) {
+  photos = photos.filter(p => p.id != id);
+  renderPhotoGrid();
+}
+
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const fakeEvent = { target: { files: e.dataTransfer.files } };
+  handleFiles(fakeEvent);
+});
+
+// ── Step 2 ───────────────────────────────────────────────────────
+function togglePlatform(card) { card.classList.toggle('selected'); }
+
+function getScheduleSettings() {
+  return {
+    tone: document.getElementById('brandTone')?.value || 'Friendly & approachable',
+    style: document.getElementById('contentStyle')?.value || 'Lifestyle & product',
+    platforms: Array.from(document.querySelectorAll('.platform-card.selected')).map(c => c.dataset.platform)
+  };
+}
+
+// ── Step 4: Queue ────────────────────────────────────────────────
+const platformLabels = {
+  instagram: { label: '📸 Instagram', cls: 'platform-ig' },
+  tiktok:    { label: '🎵 TikTok',    cls: 'platform-tt' },
+  facebook:  { label: '👍 Facebook',  cls: 'platform-fb' }
+};
+
+async function initQueue() {
+  document.getElementById('stat-photos').textContent = photos.length || '—';
+  const settings = getScheduleSettings();
+  document.getElementById('stat-platforms').textContent = settings.platforms.length || 3;
+  if (posts.length > 0) { renderQueue(); return; }
+  await generatePosts();
+}
+
+async function generatePosts() {
+  if (!apiKeys.anthropic) {
+    showToast('⚠️ Add Anthropic API key first');
+    openApiModal();
+    return;
+  }
+
+  document.getElementById('queueList').innerHTML = `
+    <div style="text-align:center;padding:60px;color:var(--muted)">
+      <div class="spinner-dark" style="margin:0 auto 16px"></div>
+      <div style="font-weight:600;color:var(--ink)">AI is creating your captions...</div>
+      <div class="generating-bar" style="width:220px;margin:14px auto 0"></div>
+    </div>`;
+
+  const settings = getScheduleSettings();
+  const platforms = settings.platforms.length > 0 ? settings.platforms : ['instagram', 'tiktok', 'facebook'];
+  const count = Math.max(photos.length, 3);
+  const dates = generateDates(count);
+  const newPosts = [];
+
+  for (let i = 0; i < count; i++) {
+    const platform = platforms[i % platforms.length];
+    const photoObj = photos[i % Math.max(photos.length, 1)];
+    try {
+      const caption = await generateCaption(platform, settings.tone, settings.style, photoObj?.url);
+      newPosts.push({
+        id: Date.now() + i,
+        photo: photoObj?.url || null,
+        originalPhotoPath: photoObj?.url || null,
+        generatedPhoto: null,
+        generating: false,
+        caption,
+        platform,
+        date: dates[i],
+        status: i === 0 ? 'posted' : 'scheduled'
+      });
+    } catch (err) {
+      console.error(err);
+      newPosts.push({
+        id: Date.now() + i,
+        photo: null,
+        originalPhotoPath: null,
+        generatedPhoto: null,
+        generating: false,
+        caption: '✨ Check out our latest product! Shop the link in bio. #smallbusiness #shoplocal',
+        platform,
+        date: dates[i],
+        status: 'scheduled'
+      });
+    }
+  }
+
+  posts = newPosts;
+  document.getElementById('stat-scheduled').textContent = posts.filter(p => p.status === 'scheduled').length;
+  renderQueue();
+}
+
+async function generateCaption(platform, tone, style, photoBase64) {
+  try {
+    const messages = [{
+      role: 'user',
+      content: photoBase64 ? [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: photoBase64.startsWith('data:image/png') ? 'image/png' : photoBase64.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg',
+            data: photoBase64.split(',')[1]
+          }
+        },
+        {
+          type: 'text',
+          text: `Look at this product image and write a compelling social media caption for ${platform}.
+
+Brand tone: ${tone}
+Content style: ${style}
+
+Requirements:
+- Describe what you actually SEE in the image
+- 2-3 engaging sentences about THIS specific product
+- Include 4-5 relevant hashtags based on what the product actually is
+- Sound authentic for a small business owner
+- Make it platform-appropriate for ${platform}
+
+Reply with ONLY the caption, nothing else.`
+        }
+      ] : [{
+        type: 'text',
+        text: `Write a single social media caption for ${platform}.
+Brand tone: ${tone}.
+Content style: ${style}.
+Requirements: 2-3 sentences, include 4-5 relevant hashtags, engaging and authentic for a small business.
+Reply with ONLY the caption, nothing else.`
+      }]
+    }];
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKeys.anthropic,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5-20251101',
+        max_tokens: 300,
+        messages
+      })
+    });
+
+    if (!res.ok) throw new Error('Caption generation failed');
+    const data = await res.json();
+    return data.content[0].text;
+  } catch (err) {
+    console.error(err);
+    return '✨ Check out our latest product! Perfect for your lifestyle. Shop the link in bio. #smallbusiness #shoplocal #handmade #quality';
+  }
+}
+
+function generateDates(count) {
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i * 3);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  });
+}
+
+function renderQueue(filter = 'all') {
+  const list = document.getElementById('queueList');
+  const filtered = filter === 'all' ? posts : posts.filter(p => p.status === filter);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:48px;color:var(--muted)">No posts in this category yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(post => {
+    const pl = platformLabels[post.platform] || { label: post.platform, cls: '' };
+    const thumb = post.generatedPhoto
+      ? `<img src="${post.generatedPhoto}" alt="generated">`
+      : post.photo
+        ? `<img src="${post.photo}" alt="product">`
+        : `<div style="font-size:32px">🛍️</div>`;
+
+    return `
+    <div class="post-card" id="post-${post.id}">
+      <div class="post-thumb" style="position:relative">
+        ${thumb}
+        ${post.generatedPhoto ? `<div style="position:absolute;bottom:4px;left:4px;background:var(--accent);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.5px;">AI</div>` : ''}
+      </div>
+      <div>
+        <div class="post-caption">${post.caption}</div>
+        <div class="post-meta">
+          <span class="meta-pill ${pl.cls}">${pl.label}</span>
+          <span class="meta-pill">📅 ${post.date}</span>
+          ${post.generatedPhoto ? `<span class="meta-pill" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">✨ AI Generated</span>` : ''}
+        </div>
+      </div>
+      <div class="post-actions">
+        <span class="post-status ${post.status}">${post.status === 'posted' ? '✓ Posted' : '🕐 Scheduled'}</span>
+        <div class="action-btns">
+          <button class="icon-btn" title="Edit & post" onclick="openEditModal(${post.id})">✏️</button>
+          <button class="icon-btn" title="Delete" onclick="deletePost(${post.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterQueue(filter, btn) {
+  document.querySelectorAll('.q-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderQueue(filter);
+}
+
+function deletePost(id) {
+  posts = posts.filter(p => p.id !== id);
+  document.getElementById('stat-scheduled').textContent = posts.filter(p => p.status === 'scheduled').length;
+  renderQueue();
+  showToast('🗑️ Post removed');
+}
+
+async function generateMorePosts() {
+  const btn = document.querySelector('.btn-primary[onclick="generateMorePosts()"]');
+  btn.innerHTML = `<div class="spinner-sm"></div> Generating...`;
+  btn.disabled = true;
+  await generatePosts();
+  btn.innerHTML = '✦ Generate More Posts';
+  btn.disabled = false;
+  showToast('✓ New posts added to your queue!');
+}
+
+// ── Modal ────────────────────────────────────────────────────────
+function openEditModal(postId) {
+  currentEditPost = posts.find(p => p.id === postId);
+  if (!currentEditPost) return;
+  document.getElementById('modalCaptionText').textContent = currentEditPost.caption;
+  document.getElementById('captionModal').classList.add('open');
+}
+
+function closeModal() {
+  const text = document.getElementById('modalCaptionText').textContent;
+  if (currentEditPost) { currentEditPost.caption = text; renderQueue(); }
+  document.getElementById('captionModal').classList.remove('open');
+  document.getElementById('copyBtn').textContent = '📋 Copy Caption';
+  document.getElementById('copyBtn').classList.remove('copied');
+}
+
+function copyCaption() {
+  const text = document.getElementById('modalCaptionText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    showToast('✓ Caption copied — paste it into the platform!');
+  });
+}
+
+async function regenerateCaption() {
+  if (!currentEditPost || !apiKeys.anthropic) {
+    showToast('⚠️ Add Anthropic API key first');
+    return;
+  }
+
+  const el = document.getElementById('modalCaptionText');
+  el.className = 'modal-caption loading';
+  el.innerHTML = `<div class="spinner-dark"></div><div>Regenerating...</div>`;
+
+  const settings = getScheduleSettings();
+  const photoUrl = currentEditPost.generatedPhoto || currentEditPost.originalPhotoPath || null;
+  
+  try {
+    const newCaption = await generateCaption(currentEditPost.platform, settings.tone, settings.style, photoUrl);
+    currentEditPost.caption = newCaption;
+  } catch {
+    currentEditPost.caption = '✨ Check out our latest product! Perfect for you. #smallbusiness';
+  }
+
+  el.className = 'modal-caption';
+  el.setAttribute('contenteditable', 'true');
+  el.textContent = currentEditPost.caption;
+  renderQueue();
+}
+
+document.getElementById('captionModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('apiModal').addEventListener('click', function(e) {
+  if (e.target === this) closeApiModal();
+});
+
+// ── Toast ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
